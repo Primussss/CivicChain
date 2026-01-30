@@ -53,8 +53,18 @@
 
 
 import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export default function Home() {
+  const location = useLocation();
+  const registered = location.state?.registered;
+
+  {registered && (
+  <div style={{ color: "green", marginBottom: "10px" }}>
+    ✅ Registration successful. You may now login.
+  </div>
+)}
+
    return (
      <div className="container">
        <h1>Welcome to Voting 2026</h1>

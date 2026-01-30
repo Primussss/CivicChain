@@ -166,8 +166,11 @@
     const canvasRef = useRef(null);
 
     const [started, setStarted] = useState(false);
-    const [blinkCount, setBlinkCount] = useState(0);
+    ////commented this//const [blinkCount, setBlinkCount] = useState(0);
     const [verified, setVerified] = useState(false);
+    //adding new const
+    const blinkCounter = useRef(0);
+    const verifiedRef = useRef(false);
 
     let eyeClosed = useRef(false);
     let lastBlinkTime = useRef(0);
@@ -202,43 +205,85 @@
       return () => camera.stop();
     }, [started]);
 
-    const onResults = (results) => {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
+//commented this logic 
+    //     const onResults = (results) => {
+//       const canvas = canvasRef.current;
+//       const ctx = canvas.getContext("2d");
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+//       ctx.clearRect(0, 0, canvas.width, canvas.height);
+//       ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-      if (!results.multiFaceLandmarks) return;
+//       if (!results.multiFaceLandmarks) return;
 
-      const lm = results.multiFaceLandmarks[0];
+//       const lm = results.multiFaceLandmarks[0];
 
-      // LEFT EYE landmarks (top & bottom)
-      const top = lm[159];
-      const bottom = lm[145];
+//       // LEFT EYE landmarks (top & bottom)
+//       const top = lm[159];
+//       const bottom = lm[145];
 
-      const eyeDistance = Math.abs(top.y - bottom.y);
+//       const eyeDistance = Math.abs(top.y - bottom.y);
 
-      const now = Date.now();
+//       const now = Date.now();
 
-      // Thresholds tuned for stability
-      if (eyeDistance < 0.006 && !eyeClosed.current) {
-        eyeClosed.current = true;
-      }
+//       // Thresholds tuned for stability
+//       if (eyeDistance < 0.006 && !eyeClosed.current) {
+//         eyeClosed.current = true;
+//       }
 
-      if (eyeDistance > 0.01 && eyeClosed.current) {
-        if (now - lastBlinkTime.current > 500) {
-          setBlinkCount((b) => b + 1);
-          lastBlinkTime.current = now;
-        }
-        eyeClosed.current = false;
-      }
+//       if (eyeDistance > 0.01 && eyeClosed.current) {
+//         if (now - lastBlinkTime.current > 500) {
+//           setBlinkCount((b) => b + 1);
+//           lastBlinkTime.current = now;
+//         }
+//         eyeClosed.current = false;
+//       }
 
-      if (blinkCount >= 2 && !verified) {
-        setVerified(true);
-        onVerified(true);
-      }
-    };
+//      if (blinkCount >= 2 && !verified) {
+//   setVerified(true);
+//   onVerified(); // fire event ONCE
+// }
+
+//     };  till here//
+
+//adding new logic
+const onResults = (results) => {
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+  if (!results.multiFaceLandmarks || verifiedRef.current) return;
+
+  const lm = results.multiFaceLandmarks[0];
+
+  const top = lm[159];
+  const bottom = lm[145];
+  const eyeDistance = Math.abs(top.y - bottom.y);
+  const now = Date.now();
+
+  // eye closed
+  if (eyeDistance < 0.006 && !eyeClosed.current) {
+    eyeClosed.current = true;
+  }
+
+  // eye opened = blink detected
+  if (eyeDistance > 0.01 && eyeClosed.current) {
+    if (now - lastBlinkTime.current > 500) {
+      blinkCounter.current += 1;
+      lastBlinkTime.current = now;
+    }
+    eyeClosed.current = false;
+  }
+
+  // 🔥 VERIFICATION TRIGGER (THIS WAS MISSING)
+  if (blinkCounter.current >= 2) {
+    verifiedRef.current = true;
+    setVerified(true);
+    onVerified(); // 🚀 THIS WILL NOW FIRE
+  }
+}; //till here
+
 
     return (
       <div style={{ textAlign: "center" }}>
@@ -288,7 +333,9 @@
           <p style={{ marginTop: "10px" }}>
             {verified
               ? "✅ Liveness Verified"
-              : `Please blink twice (Detected: ${blinkCount})`}
+              // : `Please blink twice (Detected: ${blinkCount})`}
+                 : `Please blink twice (Detected: ${blinkCounter.current})`}
+
           </p>
         )}
       </div>
