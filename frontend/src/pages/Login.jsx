@@ -99,29 +99,29 @@
 //    );
 //  }
 
-//updated working 
- import { useNavigate } from "react-router-dom";
+//updated working(30/1/2026) 
+//  import { useNavigate } from "react-router-dom";
 
- const Login = () => {
-   const navigate = useNavigate();
+//  const Login = () => {
+//    const navigate = useNavigate();
 
-   const handleLogin = (e) => {
-     e.preventDefault();
+//    const handleLogin = (e) => {
+//      e.preventDefault();
 
-     // simulate successful login
-     navigate("/Authenticate"); // 👈 THIS WAS MISSING
-   };
+//      // simulate successful login
+//      navigate("/Authenticate"); // 👈 THIS WAS MISSING
+//    };
 
-   return (
-     <form onSubmit={handleLogin}>
-       <input placeholder="Email" />
-       <input placeholder="Password" type="password" />
-       <button type="submit">Login</button>
-     </form>
-   );
- };
+//    return (
+//      <form onSubmit={handleLogin}>
+//        <input placeholder="Email" />
+//        <input placeholder="Password" type="password" />
+//        <button type="submit">Login</button>
+//      </form>
+//    );
+//  };
 
- export default Login;
+//  export default Login;
 
 //3rd update
 // import { useNavigate } from "react-router-dom";
@@ -145,4 +145,53 @@
 // };
 
 // export default Login;
+
+//updated for login check
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    const res = await fetch("http://localhost:8000/login-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!res.ok) {
+      alert("Invalid credentials");
+      return;
+    }
+
+    // store email for OTP step
+    sessionStorage.setItem("email", email);
+
+    navigate("/authenticate");
+  };
+
+  return (
+    <div className="container">
+      <h2>Login</h2>
+
+      <input
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <button onClick={handleLogin}>Login</button>
+    </div>
+  );
+}
 

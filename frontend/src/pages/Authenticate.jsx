@@ -231,62 +231,155 @@
 // }
 
 
-//trying to fix the auto redirect to otp 
-import { useState, useEffect } from "react";
+//trying to fix the auto redirect to otp and working 
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import AuthCard from "../components/AuthCard";
+// import FaceCapture from "../components/FaceCapture";
+
+// export default function Authenticate() {
+//   const navigate = useNavigate();
+//   const [faceVerified, setFaceVerified] = useState(false);
+//   const [status, setStatus] = useState("waiting"); 
+//   // waiting | verified | sending
+
+//   useEffect(() => {
+//     if (!faceVerified) return;
+
+//     // Step 1: Show success message
+//     setStatus("verified");
+
+//     // Step 2: Small delay for UX clarity
+//     const timer = setTimeout(async () => {
+//       setStatus("sending");
+
+//       try {
+//         await fetch("http://localhost:8000/send-otp", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify({
+//             email: "abhighadmode1@gmail.com", // replace later with logged-in email
+//           }),
+//         });
+
+//         // Step 3: Redirect to OTP page
+//         navigate("/otp");
+//       } catch {
+//         alert("Failed to send OTP");
+//       }
+//     }, 1500);
+
+//     return () => clearTimeout(timer);
+//   }, [faceVerified, navigate]);
+
+//   return (
+//     <AuthCard title="Biometric Verification">
+//       <FaceCapture onVerified={setFaceVerified} />
+
+//       {status === "verified" && (
+//         <p style={{ color: "green", textAlign: "center", marginTop: "10px" }}>
+//           ✅ Face detected successfully
+//         </p>
+//       )}
+
+//       {status === "sending" && (
+//         <p style={{ textAlign: "center", marginTop: "10px" }}>
+//           Sending OTP…
+//         </p>
+//       )}
+//     </AuthCard>
+//   );
+// }
+
+
+//new for login added
+// import { useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import FaceCapture from "../components/FaceCapture";
+// import AuthCard from "../components/AuthCard";
+
+// export default function Authenticate() {
+//   const [faceVerified, setFaceVerified] = useState(false);
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     if (faceVerified) {
+//       const email = sessionStorage.getItem("email");
+
+//       fetch("http://localhost:8000/send-otp", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ email })
+//       });
+
+//       setTimeout(() => navigate("/otp"), 1000);
+//     }
+//   }, [faceVerified, navigate]);
+
+//   return (
+//     <AuthCard title="Face Verification">
+//       <FaceCapture onVerified={setFaceVerified} />
+
+//       {faceVerified && (
+//         <p style={{ color: "green", textAlign: "center" }}>
+//           Face verified. Redirecting to OTP…
+//         </p>
+//       )}
+//     </AuthCard>
+//   );
+// }
+
+//2nd change for login 
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthCard from "../components/AuthCard";
 import FaceCapture from "../components/FaceCapture";
+import AuthCard from "../components/AuthCard";
 
 export default function Authenticate() {
-  const navigate = useNavigate();
   const [faceVerified, setFaceVerified] = useState(false);
-  const [status, setStatus] = useState("waiting"); 
-  // waiting | verified | sending
+  const [otpSent, setOtpSent] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!faceVerified) return;
+    if (faceVerified && !otpSent) {
+      const email = sessionStorage.getItem("email");
 
-    // Step 1: Show success message
-    setStatus("verified");
-
-    // Step 2: Small delay for UX clarity
-    const timer = setTimeout(async () => {
-      setStatus("sending");
-
-      try {
-        await fetch("http://localhost:8000/send-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: "abhighadmode1@gmail.com", // replace later with logged-in email
-          }),
-        });
-
-        // Step 3: Redirect to OTP page
-        navigate("/otp");
-      } catch {
-        alert("Failed to send OTP");
+      if (!email) {
+        alert("Session expired. Please login again.");
+        navigate("/login");
+        return;
       }
-    }, 1500);
 
-    return () => clearTimeout(timer);
-  }, [faceVerified, navigate]);
+      // 🔐 SEND OTP
+      fetch("http://localhost:8000/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      })
+        .then(() => {
+          setOtpSent(true);
+
+          // ⏳ Short delay for UX
+          setTimeout(() => {
+            navigate("/otp");
+          }, 1200);
+        })
+        .catch(() => {
+          alert("Failed to send OTP");
+        });
+    }
+  }, [faceVerified, otpSent, navigate]);
 
   return (
-    <AuthCard title="Biometric Verification">
+    <AuthCard title="Face Verification">
       <FaceCapture onVerified={setFaceVerified} />
 
-      {status === "verified" && (
+      {faceVerified && (
         <p style={{ color: "green", textAlign: "center", marginTop: "10px" }}>
-          ✅ Face detected successfully
-        </p>
-      )}
-
-      {status === "sending" && (
-        <p style={{ textAlign: "center", marginTop: "10px" }}>
-          Sending OTP…
+          Face verified. Sending OTP…
         </p>
       )}
     </AuthCard>
   );
 }
+

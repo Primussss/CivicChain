@@ -275,87 +275,128 @@
 //   );
 // }
 
-//the otp and email code added
+//the otp and email code added working 30/1/2026
+// import { useState } from "react";
+// import { useLocation } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
+// import AuthCard from "../components/AuthCard";
+// import Input from "../components/Input";
+// import Button from "../components/Button";
+
+// export default function OTPVerify() {
+//   const navigate = useNavigate();
+//   const [otp, setOtp] = useState("");
+//   const [error, setError] = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const location = useLocation();
+//   const mode = location.state?.mode;
+//   const formData = location.state?.formData;
+
+//   const verifyOtp = async () => {
+//     setError("");
+
+//     if (otp.length !== 6) {
+//       setError("OTP must be 6 digits");
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+
+//       const res = await fetch("http://localhost:8000/verify-otp", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           email: "abhighadmode1@gmail.com",
+//           otp: otp,
+//         }),
+//       });
+
+//       const data = await res.json();
+
+//       if (data.status === "success") {
+//           if (mode === "register") {
+//   // Save user AFTER OTP verification
+//           await fetch("http://localhost:8000/register-user", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(formData),
+//       });
+
+//         navigate("/", {
+//     state: { registered: true },
+//        });
+// } else {
+//   navigate("/vote");
+// }
+//       } else {
+//         setError("Invalid OTP");
+//       }
+//     } catch {
+//       setError("Server error. Try again.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <AuthCard title="OTP Verification">
+//       <p>Enter the OTP sent to your registered email</p>
+
+//       <Input
+//         placeholder="Enter OTP"
+//         value={otp}
+//         onChange={(e) => setOtp(e.target.value)}
+//         maxLength={6}
+//       />
+
+//       {error && <p style={{ color: "red" }}>{error}</p>}
+
+//       <Button
+//         text={loading ? "Verifying..." : "Verify OTP"}
+//         onClick={verifyOtp}
+//       />
+//     </AuthCard>
+//   );
+// }
+
+//new for login added
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import AuthCard from "../components/AuthCard";
-import Input from "../components/Input";
-import Button from "../components/Button";
 
 export default function OTPVerify() {
-  const navigate = useNavigate();
   const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const location = useLocation();
-  const mode = location.state?.mode;
-  const formData = location.state?.formData;
+  const navigate = useNavigate();
 
   const verifyOtp = async () => {
-    setError("");
+    const email = sessionStorage.getItem("email");
 
-    if (otp.length !== 6) {
-      setError("OTP must be 6 digits");
-      return;
-    }
+    const res = await fetch("http://localhost:8000/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp })
+    });
 
-    try {
-      setLoading(true);
+    const data = await res.json();
 
-      const res = await fetch("http://localhost:8000/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: "abhighadmode1@gmail.com",
-          otp: otp,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.status === "success") {
-          if (mode === "register") {
-  // Save user AFTER OTP verification
-          await fetch("http://localhost:8000/register-user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(formData),
-      });
-
-        navigate("/", {
-    state: { registered: true },
-       });
-} else {
-  navigate("/vote");
-}
-      } else {
-        setError("Invalid OTP");
-      }
-    } catch {
-      setError("Server error. Try again.");
-    } finally {
-      setLoading(false);
+    if (data.status === "success") {
+      navigate("/vote");
+    } else {
+      alert("Invalid OTP");
     }
   };
 
   return (
     <AuthCard title="OTP Verification">
-      <p>Enter the OTP sent to your registered email</p>
-
-      <Input
+      <input
         placeholder="Enter OTP"
         value={otp}
         onChange={(e) => setOtp(e.target.value)}
-        maxLength={6}
       />
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <Button
-        text={loading ? "Verifying..." : "Verify OTP"}
-        onClick={verifyOtp}
-      />
+      <button onClick={verifyOtp}>Verify OTP</button>
     </AuthCard>
   );
 }
+
